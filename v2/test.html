@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mesai Takip V2 - Hesaplama Testleri</title>
+</head>
+<body>
+  <h2>Mesai Takip V2.0</h2>
+  <p>Hesaplama testleri</p>
+
+  <pre id="results">Testler çalıştırılıyor...</pre>
+
+  <script>
+    const results = document.getElementById('results');
+    let output = '';
+
+    const originalLog = console.log;
+    const originalError = console.error;
+
+    console.log = (...args) => {
+      output += args.join(' ') + '\n';
+      results.textContent = output;
+      originalLog.apply(console, args);
+    };
+
+    console.error = (...args) => {
+      output += args.join(' ') + '\n';
+      results.textContent = output;
+      originalError.apply(console, args);
+    };
+  </script>
+
+  <script src="./calculator.js"></script>
+  <script src="./calculator.test.js"></script>
+</body>
+</html>
