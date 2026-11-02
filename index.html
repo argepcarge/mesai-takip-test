@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="app-version" content="2026.11.02-beta.14">
+<title id="pageTitle">FAZLA MESAİ ÇİZELGESİ</title>
+<link rel="manifest" href="manifest.json">
+<script src="./jspdf.umd.min.js"></script>
+<script src="./jspdf.plugin.autotable.min.js"></script>
+
+<link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="header-controls">
+  <div class="header-date-selectors">
+    <div class="date-select-item">
+      <label for="selectYear">Yıl: </label>
+      <select id="selectYear" onchange="updateMonthDays()"></select>
+    </div>
+
+    <div class="date-select-item">
+      <label for="selectMonth">Ay: </label>
+      <select id="selectMonth" onchange="updateMonthDays()">
+        <option value="0">OCAK</option>
+        <option value="1">ŞUBAT</option>
+        <option value="2">MART</option>
+        <option value="3">NİSAN</option>
+        <option value="4">MAYIS</option>
+        <option value="5">HAZİRAN</option>
+        <option value="6">TEMMUZ</option>
+        <option value="7">AĞUSTOS</option>
+        <option value="8">EYLÜL</option>
+        <option value="9">EKİM</option>
+        <option value="10">KASIM</option>
+        <option value="11">ARALIK</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="openRestoreModal()" title="Kopyalanan metni geri yükle">
+      📥 Veri Yükle
+    </button>
+    <button class="btn btn-primary" onclick="copyWhatsAppReport(this)" title="WhatsApp / Not Defteri raporu kopyala">
+      📋 Kopyala
+    </button>
+    <button class="btn btn-success" id="sharePdfBtn" onclick="shareVectorPDF(this)">
+      PDF Paylaş
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showSheet(1)">Çizelge</button>
+  <button class="tab" onclick="showSheet(2)">Hesap</button>
+  <button class="tab" onclick="showSheet(4)">Ücret</button>
+</div>
+
+<div id="sheet1" class="sheet">
+
+  <!-- TABLO ÜSTÜ HIZLI ŞABLON ÇUBUĞU -->
+  <div class="quick-templates-bar">
+    <span class="quick-templates-label">⚡</span>
+    <button type="button" class="btn-template" onclick="applyTemplateToActiveDay('17:30-20:30')">17:30-20:30</button>
+    <button type="button" class="btn-template" onclick="applyTemplateToActiveDay('17:30-20:00')">17:30-20:00</button>
+    <button type="button" class="btn-template" onclick="applyTemplateToActiveDay('08:00-14:00')">08:00-14:00</button>
+  </div>
+
+  <table id="tableSheet1">
+
+    <colgroup>
+      <col class="col-1">
+      <col class="col-2">
+      <col class="col-3">
+      <col class="col-4">
+    </colgroup>
+
+    <thead>
+
+      <tr>
+        <th colspan="4" class="title" id="title1">
+          <span>ŞENGÜN MAKİNA</span> <span id="titleSub">XXXXXX AYI FAZLA MESAİ ÇİZELGESİ</span>
+        </th>
+      </tr>
+
+      <tr>
+        <td class="label">ADI-SOYADI</td>
+        <td colspan="3">
+          <input 
+            id="name" 
+            aria-label="Adı Soyadı" 
+            oninput="syncName();save()"
+          >
+        </td>
+      </tr>
+
+      <tr>
+        <th>TARİH</th>
+        <th>MESAİ SAATLERİ</th>
+        <th>MOLA(DK)</th>
+        <th>YOL-YEMEK</th>
+      </tr>
+
+    </thead>
+
+    <tbody id="tbodySheet1"></tbody>
+
+  </table>
+
+</div>
+
+<div id="sheet2" class="sheet hidden">
+
+  <div class="sheet2-summary-cards">
+    <div class="summary-card pufa-card">
+      <div class="summary-card-title">1.5X (%50) TOPLAMI</div>
+      <div class="summary-card-hours" id="card15Hours">00:00 Sa (0 Dk)</div>
+      <div class="summary-card-pay" id="card15Pay">0 ₺</div>
+    </div>
+    <div class="summary-card servis-card">
+      <div class="summary-card-title">2X (%100) TOPLAMI</div>
+      <div class="summary-card-hours" id="card20Hours">00:00 Sa (0 Dk)</div>
+      <div class="summary-card-pay" id="card20Pay">0 ₺</div>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <table id="tableSheet2">
+      <colgroup>
+        <col style="width:20%">
+        <col style="width:22%">
+        <col style="width:10%">
+        <col style="width:16%">
+        <col style="width:16%">
+        <col style="width:16%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>TARİH</th>
+          <th>MESAİ ARALIĞI</th>
+          <th>MOLA(DK)</th>
+          <th>MESAİ TİPİ</th>
+          <th>TOPLAM SÜRE</th>
+          <th>ÜCRET</th>
+        </tr>
+      </thead>
+      <tbody id="tbodySheet2"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="sheet4" class="sheet hidden">
+  <div class="salary-dashboard">
+    <div class="salary-grid">
+      <div class="salary-block">
+        <div class="salary-block-title">Maaş ve Birim Ücretler</div>
+        <div class="salary-row">
+          <span class="salary-label">Aylık Net Maaş</span>
+          <div class="salary-input-wrapper primary-input">
+            <input 
+              id="salary" 
+              type="text" 
+              inputmode="numeric" 
+              pattern="[0-9]*" 
+              value="0" 
+              aria-label="Aylık maaş" 
+              onfocus="clearZeroOnFocus(this)" 
+              oninput="formatSalaryLive(this);rememberSalary();save();calc()" 
+              onblur="restoreZeroOnBlur(this);rememberSalary();save();calc()">
+            <span class="salary-unit">₺</span>
+          </div>
+        </div>
+        <div class="salary-row">
+          <span class="salary-label rate-label-normal">Normal Ücret</span>
+          <span id="normalHour" class="salary-value-text rate-hour-value">0 ₺</span>
+        </div>
+        <div class="salary-row">
+          <span class="salary-label rate-label-15">1.5X Mesai (%50)</span>
+          <span id="overtimeHour" class="salary-value-text rate-hour-value">0 ₺</span>
+        </div>
+        <div class="salary-row">
+          <span class="salary-label rate-label-20">2X Mesai (%100)</span>
+          <span id="doubleHour" class="salary-value-text rate-hour-value">0 ₺</span>
+        </div>
+        <!-- Hesaplama kodunun kullandığı dakika değerleri görünmez tutulur. -->
+        <span id="normalMin" hidden></span>
+        <span id="overtimeMin" hidden></span>
+        <span id="doubleMin" hidden></span>
+      </div>
+
+      <div class="salary-block">
+        <div class="salary-block-title">Hakediş ve Kesintiler</div>
+        <div class="salary-row">
+          <span class="salary-label" style="font-weight: 800; color: #22C55E;">Tabloya Göre Mesai (Kesinti Öncesi)</span>
+          <span id="overtimePay" class="salary-value-text green-text">0 ₺</span>
+        </div>
+        <div class="salary-row" style="margin-top: 10px;">
+          <span class="salary-label" style="color: #dc2626; font-weight: 700;">Kesinti Süresi</span>
+          <div class="deduction-inputs-group">
+            <div class="salary-input-wrapper red-bg deduction-compact">
+              <input 
+                id="deductionHours" 
+                type="text" 
+                inputmode="numeric" 
+                pattern="[0-9]*" 
+                value="0" 
+                aria-label="Kesinti Saati" 
+                onfocus="clearZeroOnFocus(this)" 
+                oninput="this.value=this.value.replace(/\D/g,'');save();calc()" 
+                onblur="restoreZeroOnBlur(this);save();calc()">
+              <span class="salary-unit" style="color: #dc2626;">Sa</span>
+            </div>
+            <div class="salary-input-wrapper red-bg deduction-compact">
+              <input 
+                id="deductionMinutes" 
+                type="text" 
+                inputmode="numeric" 
+                pattern="[0-9]*" 
+                value="0" 
+                aria-label="Kesinti Dakikası" 
+                onfocus="clearZeroOnFocus(this)" 
+                oninput="this.value=this.value.replace(/\D/g,'');save();calc()" 
+                onblur="restoreZeroOnBlur(this);save();calc()">
+              <span class="salary-unit" style="color: #dc2626;">Dk</span>
+            </div>
+          </div>
+        </div>
+        <div class="salary-row">
+          <span class="salary-label" style="font-weight: 800; color: #dc2626;">Yapılan Toplam Kesinti</span>
+          <span id="deduction" class="salary-value-text red-text">0 ₺</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="net-pay-card">
+      <div class="net-pay-title">NET MESAİ ÜCRETİ</div>
+      <div class="net-pay-value-wrap">
+        <span id="netPay" class="net-pay-value">0 ₺</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ÇOKLU MESAİ VE GÜN DÜZENLEME AÇILIR PENCERESİ (MODAL) -->
+<div id="shiftModal" class="modal-overlay hidden" onclick="handleModalBackdropClick(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">Mesai Düzenle</h3>
+      <button type="button" class="modal-close" onclick="closeShiftModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- MODAL İÇİ ŞABLON ÇUBUĞU -->
+      <div class="quick-templates-bar" style="margin-bottom:12px;">
+        <span class="quick-templates-label">⚡</span>
+        <button type="button" class="btn-template" onclick="applyTemplateToModalRow('17:30-20:30')">17:30-20:30</button>
+        <button type="button" class="btn-template" onclick="applyTemplateToModalRow('17:30-20:00')">17:30-20:00</button>
+        <button type="button" class="btn-template" onclick="applyTemplateToModalRow('08:00-14:00')">08:00-14:00</button>
+      </div>
+
+      <div id="shiftRowsContainer"></div>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnAddShiftRow" onclick="addShiftRow()">
+        + Yeni Mesai Aralığı Ekle
+      </button>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-danger" onclick="clearActiveDayFromModal()">Günü Temizle</button>
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeShiftModal()">Vazgeç</button>
+        <button type="button" class="btn btn-success" onclick="saveShiftModal()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERİ GERİ YÜKLEME AÇILIR PENCERESİ (MODAL) -->
+<div id="restoreModal" class="modal-overlay hidden" onclick="handleRestoreModalBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Mesai Verisi Geri Yükle</h3>
+      <button type="button" class="modal-close" onclick="closeRestoreModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 10px 0;font-size:12px;color:#64748b;">
+        Kopyaladığınız çizelge metnini buraya yapıştırıp "Verileri Yükle"ye basarak personeli ve mesai saatlerini geri yükleyebilirsiniz:
+      </p>
+      <textarea id="restoreTextInput" style="width:100%;height:190px;font-family:monospace;font-size:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;outline:none;" placeholder="Kopyalanan metni buraya yapıştırın..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeRestoreModal()">Vazgeç</button>
+      <button type="button" class="btn btn-success" onclick="applyRestoredText()">Verileri Yükle</button>
+    </div>
+  </div>
+</div>
+
+<div id="appVersion" class="app-version" style="text-align:center;font-size:11px;color:#64748b;margin:14px 0 24px;"></div>
+
+<div id="saveToast" class="save-toast">Kaydedildi ✓</div>
+
+<script src="./main.js" defer></script>
+
+
+</body>
+</html>
